@@ -45,4 +45,5 @@ https://baidu.com
 ## 一些特殊符号的表示
 #### 指数和对数
 n<sup>2</sup>
+
 log<sub>2</sub>n
