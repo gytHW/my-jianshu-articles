@@ -41,3 +41,8 @@ https://baidu.com
 
 ### 插入图片
 ![平安](http://upload-images.jianshu.io/upload_images/1038472-439850b44f9ea5c1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
+
+## 一些特殊符号的表示
+#### 指数和对数
+n<sup>2</sup>
+log<sub>2</sub>n
