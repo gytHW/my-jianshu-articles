@@ -6,7 +6,7 @@ git add文件之后想取消add的文件，几种方法：
 - 1）```git reset head + 文件名```,适用于一个个文件恢复
 - 2) 干脆继续commit，然后```git reset HEAD~1```
 
-###3. 设置本地分支的远程分支
+### 3. 设置本地分支的远程分支
 ```git push --set-upstream origin hotfix/20190110```,若远程不存在此分支会自动创建
 
 ### 4. 修改分支名
