@@ -33,4 +33,5 @@ link start: [Katou_Megumi](https://www.jianshu.com/u/c8cb345feef2)
 | 20 | [MySQL处理高并发查询和写入的几个技巧](./数据库/MySQL处理高并发查询和写入的几个技巧.md) | 数据库 | 2019-04-19 |
 | 21 | [PHP从数组中删除一个值为a的元素的快捷方法](./PHP/PHP从数组中删除一个值为a的元素的快捷方法.md) | PHP | 2019-04-23 |
 | 22 | [mysql一些常用命令速记（持续更新ing）](./数据库/mysql一些常用命令速记（持续更新ing）.md) | 数据库 | 2019-04-23 |
+| 23 | [explain结果每个字段的含义说明](./数据库/explain结果每个字段的含义说明.md) | 数据库 | 2019-04-28 |
 | To be continue...... |
