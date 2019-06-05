@@ -1,13 +1,14 @@
 ### 什么是KeepAlive？
-首先，我们要分清我们谈的是**TCP**的 **```KeepAlive```** 还是**HTTP**的 **```Keep-Alive```**。TCP的KeepAlive和HTTP的Keep-Alive**是完全不同的概念，不能混为一谈**。实际上HTTP的KeepAlive写法是```Keep-Alive```，跟TCP的```KeepAlive```写法上也有不同。
+首先，我们要明确我们谈的是**TCP**的 **```KeepAlive```** 还是**HTTP**的 **```Keep-Alive```**。TCP的KeepAlive和HTTP的Keep-Alive**是完全不同的概念，不能混为一谈**。实际上HTTP的KeepAlive写法是```Keep-Alive```，跟TCP的```KeepAlive```写法上也有不同。
 
 * TCP的**keepalive**是侧重在保持客户端和服务端的连接，一方会不定期发送心跳包给另一方，当一方端掉的时候，没有断掉的定时发送几次**心跳包**，如果间隔发送几次，对方都返回的是RST，而不是ACK，那么就释放当前链接。设想一下，如果tcp层没有keepalive的机制，一旦一方断开连接却没有发送FIN给另外一方的话，那么另外一方会一直以为这个连接还是存活的，几天，几月。那么这对服务器资源的影响是很大的。
 
 * HTTP的**keep-alive**一般我们都会带上中间的**横杠**，普通的http连接是客户端连接上服务端，然后结束请求后，由客户端或者服务端进行http连接的关闭。下次再发送请求的时候，客户端再发起一个连接，传送数据，关闭连接。这么个流程反复。但是一旦客户端发送connection:keep-alive头给服务端，且服务端也接受这个keep-alive的话，两边对上暗号，这个连接就可以复用了，一个http处理完之后，另外一个http数据直接从这个连接走了。减少新建和断开TCP连接的消耗。
 
 二者的作用简单来说：
-> HTTP协议的Keep-Alive意图在于连接复用，同一个连接上串行方式传递请求-响应数据
-> TCP的KeepAlive机制意图在于保活、心跳，检测连接错误
+> HTTP协议的Keep-Alive意图在于短时间内连接复用，希望可以短时间内在同一个连接上进行多次请求/响应。
+>
+> TCP的KeepAlive机制意图在于保活、心跳，检测连接错误。当一个TCP连接两端长时间没有数据传输时(通常默认配置是2小时)，发送keepalive探针，探测链接是否存活。
 
 **总之，记住HTTP的Keep-Alive和TCP的KeepAlive不是一回事。**
 
@@ -50,10 +51,32 @@ TCP socket也有三个选项和内核对应，通过setsockopt系统调用针对
 
 举个例子，以我的系统默认设置为例，kernel默认设置的tcpkeepalivetime是7200s, 如果我在应用程序中针对socket开启了KeepAlive,然后设置的TCP_KEEPIDLE为60，那么TCP协议栈在发现TCP链接空闲了60s没有数据传输的时候就会发送第一个探测报文。
 
+##### 3. 需要注意，KeepAlive的不足和局限性
+其实，tcp自带的keepalive还是有些不足之处的。
+
+**keepalive只能检测连接是否存活，不能检测连接是否可用。**例如，某一方发生了死锁，无法在连接上进行任何读写操作，但是操作系统仍然可以响应网络层keepalive包。
+
+TCP keepalive 机制依赖于操作系统的实现,灵活性不够，默认关闭，且默认的 keepalive 心跳时间是 两个小时, 时间较长。 
+
+代理(如socks proxy)、或者负载均衡器，会让tcp keep-alive失效
+
+基于此，我们旺旺需要加上应用层的心跳。这个需要自己实现，这里就不展开了。
+
 ***
 
 ### HTTP的Keep-Alive
-HTTP的Keep-Alive是**HTTP1.1**新增默认开启的功能。TCP连接建立之后，HTTP协议使用TCP传输HTTP协议的请求(Request)和响应(Response)数据，一次完整的HTTP事务如下图：
+
+##### 1. HTTP为什么需要Keep-Alive？
+通常一个网页可能会有很多组成部分，除了文本内容，还会有诸如：js、css、图片等静态资源，有时还会异步发起AJAX请求。只有所有的资源都加载完毕后，我们看到网页完整的内容。然而，一个网页中，可能引入了几十个js、css文件，上百张图片，如果每请求一个资源，就创建一个连接，然后关闭，代价实在太大了。
+
+基于此背景，我们希望连接能够在**短时间内**得到复用，在加载同一个网页中的内容时，尽量的复用连接，这就是HTTP协议中keep-alive属性的作用。
+
+> * HTTP的Keep-Alive是**HTTP1.1**中**默认开启**的功能。通过headers设置"Connection: close "关闭
+> * 在HTTP1.0中是**默认关闭**的。通过headers设置"Connection: Keep-Alive"开启。
+
+对于客户端来说，不论是浏览器，还是手机App，或者我们直接在Java代码中使用HttpUrlConnection，只是负责在请求头中设置Keep-Alive。Keep-Alive属性保持连接的**时间长短是由服务端决定的**，通常配置都是在**几十秒左右。** 
+
+TCP连接建立之后，HTTP协议使用TCP传输HTTP协议的请求(Request)和响应(Response)数据，一次完整的HTTP事务如下图：
 ![HTTP请求](https://upload-images.jianshu.io/upload_images/1038472-72cebee48a75c5e3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 这张图我简化了HTTP(Req)和HTTP(Resp)，实际上的请求和响应需要多个TCP报文。
 从图中可以发现一个完整的HTTP事务，有链接的建立，请求的发送，响应接收，断开链接这四个过程，早期通过HTTP协议传输的数据以文本为主，一个请求可能就把所有要返回的数据取到，但是，现在要展现一张完整的页面需要很多个请求才能完成，如图片.JS.CSS等，如果每一个HTTP请求都需要新建并断开一个TCP，这个开销是完全没有必要的。
