@@ -38,4 +38,5 @@ link start: [Katou_Megumi](https://www.jianshu.com/u/c8cb345feef2)
 | 25 | [https中的对称加密和非对称加密](./计算机网络/https中的对称加密和非对称加密.md) | 计算机网络 | 2019-06-24 |
 | 26 | [Redis有序集合zset的底层实现](./数据库/Redis有序集合zset的底层实现.md) | 数据库 | 2019-07-03 |
 | 27 | [利用异或实现一些快捷的算法技巧](./算法/利用异或实现一些快捷的算法技巧.md) | 算法 | 2019-07-04 |
+| 28 | [一个php数组转json变对象的踩坑记录](./PHP/一个php数组转json变对象的踩坑记录.md) | PHP | 2019-08-08 |
 | To be continue...... |
